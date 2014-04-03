@@ -1,15 +1,9 @@
-" be iMproved, required for vundle etc
-set nocompatible
- " Some Linux distributions set filetype in /etc/vimrc.
- " Clear filetype flags before changing runtimepath to force Vim to reload them.
-filetype off
-filetype plugin indent off
-set runtimepath+=$GOROOT/misc/vim
-filetype plugin indent on
-syntax on
- " To ignore plugin indent changes, instead use:
-filetype plugin on
+" vim:fdm=marker
 
+set shell=bash
+set nocompatible
+filetype off
+" Vundle {{{
 " Brief help
 " :BundleList          - list configured plugins
 " :BundleInstall(!)    - install (update) plugins
@@ -22,82 +16,90 @@ filetype plugin on
 " set the runtime path to include Vundle and initialize
 set rtp+=~/.vim/bundle/vundle/
 call vundle#rc()
-" alternatively, pass a path where Vundle should install plugins
-" let path = '~/some/path/here'
-" call vundle#rc(path)
-
-
-" Bundles:
 Bundle 'gmarik/vundle'
+" }}}
+" disable arrow keys for practice {{{
+	map <up> <nop>
+	map <down> <nop>
+	map <left> <nop>
+	map <right> <nop>
+	imap <up> <nop>
+	imap <down> <nop>
+	imap <left> <nop>
+	imap <right> <nop>
+" }}}
+" Bundles {{{
+Bundle 'ap/vim-css-color'
 Bundle 'cakebaker/scss-syntax.vim'
-Bundle 'chriskempson/base16-vim'
+" Bundle 'chriskempson/base16-vim'
+Bundle 'fatih/vim-go'
+Bundle 'itchyny/lightline.vim'
+" Bundle 'jnurmine/Zenburn'
 Bundle 'majutsushi/tagbar'
 Bundle 'mattn/emmet-vim'
+Bundle 'mhinz/vim-signify'
 Bundle 'scrooloose/nerdtree'
-Bundle 'sirver/ultiSnips'
+Bundle 'scrooloose/syntastic'
+Bundle 'sirver/UltiSnips'
 	Bundle 'honza/vim-snippets'
+Bundle 'sjl/gundo.vim'
+Bundle 'terryma/vim-expand-region'
+Bundle 'tpope/vim-abolish'
+Bundle 'tpope/vim-commentary'
 Bundle 'tpope/vim-fugitive'
 Bundle 'tpope/vim-repeat'
 Bundle 'tpope/vim-sensible'
 Bundle 'tpope/vim-surround'
+Bundle 'tpope/vim-unimpaired'
+Bundle 'Valloric/YouCompleteMe'
+Bundle 'w0ng/vim-hybrid'
 Bundle 'yegappan/mru'
+" }}}
+" Editor {{{
+	" Aesthetics {{{
+	set t_Co=256
+	colorscheme hybrid
+	" }}}
 
+	" save when forgot sudo
+	cnoremap sudow w !sudo tee % >/dev/null 
+	
+	set number
 
-" emmet config
-let g:user_emmet_expandabbr_key="<c-e>"
-let g:use_emmet_complete_tag = 1
+	" tabs
+	set tabstop=4			" a tab is four spaces
+	set shiftwidth=4  		" number of spaces to use for autoindenting
+	set shiftround
+	set copyindent
 
-" colorscheme config
-set t_Co=256
-"set background=dark
-let base16colorspace=256  " Access colors present in 256 colorspace
-colorscheme default
+	set showmatch 			" show matching parens
+	
+	"set wildignore=*.swp,*.bak,*.pyc,*.class
+	set title                " change the terminal's title
+	set visualbell           " don't beep
+	set noerrorbells         " don't beep
+	set nobackup
+	set pastetoggle=<F2>
+	nnoremap ; :
+	" Multiple Files
+	set splitbelow
+	set splitright
+	nnoremap <C-J> <C-W><C-J>
+	nnoremap <C-K> <C-W><C-K>
+	nnoremap <C-L> <C-W><C-L>
+	nnoremap <C-H> <C-W><C-H>
 
-
-" disable arrow keys for practice
-map <up> <nop>
-map <down> <nop>
-map <left> <nop>
-map <right> <nop>
-imap <up> <nop>
-imap <down> <nop>
-imap <left> <nop>
-imap <right> <nop>
-
-" graphical elements
-set number
-
-" tabs
-set tabstop=4			" a tab is four spaces
-set shiftwidth=4  		" number of spaces to use for autoindenting
-set shiftround
-set copyindent
-
-set showmatch 			" show matching parens
-
-" save when forgot sudo
-cnoremap sudow w !sudo tee % >/dev/null 
-
-
-"set wildignore=*.swp,*.bak,*.pyc,*.class
-set title                " change the terminal's title
-set visualbell           " don't beep
-set noerrorbells         " don't beep
-set nobackup
-set pastetoggle=<F2>
-nnoremap ; :
-
-" Better Search
-set smarttab   " insert tabs on the start of a line according to shiftwidth, not tabstop
-set hlsearch   " highlight search terms
-set incsearch  " show search matches as you type
-set ignorecase " ignore case when searching
-set smartcase  " ignore case if search pattern is all lowercase, case-sensitive otherwise
-
-" Multiple Files
-set splitbelow
-set splitright
-nnoremap <C-J> <C-W><C-J>
-nnoremap <C-K> <C-W><C-K>
-nnoremap <C-L> <C-W><C-L>
-nnoremap <C-H> <C-W><C-H>
+	" Tagbar
+	nmap <F8> :TagbarToggle<CR>
+" }}}
+" Web {{{
+	" emmet config {{{
+		let g:user_emmet_expandabbr_key="<c-e>"
+		let g:use_emmet_complete_tag = 1
+	" }}}
+	
+" }}}
+" Golang {{{
+	au Filetype go nnoremap <F5> :GoRun %<CR>
+	au Filetype go nnoremap <F6> :GoTest<CR>
+" }}}
