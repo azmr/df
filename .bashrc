@@ -6,7 +6,7 @@
 [[ $- != *i* ]] && return
 
 alias ls='ls --color=auto'
-alias cdgo="cd ~/go/src/github.com/azmreece && ls"
+alias cdgo="cd ~/go/src/github.com/azmr && ls"
 alias cdaz="cd ~/web/azmr.co.uk && ls"
 alias cdem="cd ~/web/embercreations.co.uk && ls"
 alias cdsk="cd ~/web/skilledge.org && ls"
