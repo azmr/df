@@ -49,6 +49,7 @@ Bundle 'tpope/vim-commentary'
 Bundle 'tpope/vim-fugitive'
 Bundle 'tpope/vim-repeat'
 Bundle 'tpope/vim-sensible'
+Bundle 'tpope/vim-speeddating'
 Bundle 'tpope/vim-surround'
 Bundle 'tpope/vim-unimpaired'
 Bundle 'Valloric/YouCompleteMe'
@@ -91,6 +92,10 @@ Bundle 'yegappan/mru'
 
 	" Tagbar
 	nmap <F8> :TagbarToggle<CR>
+
+	" vim-signify (vcs tracking)
+	let g:signify_vcs_list = ['git', 'hg']
+	let g:signify_sign_overwrite = 0
 " }}}
 " Web {{{
 	" emmet config {{{
@@ -100,6 +105,6 @@ Bundle 'yegappan/mru'
 	
 " }}}
 " Golang {{{
-	au Filetype go nnoremap <F5> :GoRun %<CR>
-	au Filetype go nnoremap <F6> :GoTest<CR>
+	au Filetype go nnoremap <F5> :w<CR>:GoRun %<CR>
+	au Filetype go nnoremap <F6> :w<CR>:GoTest<CR>
 " }}}
