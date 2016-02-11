@@ -2,8 +2,12 @@
 set nocompatible              " be iMproved, required
 filetype off                  " required
 
+" avoid autocmd duplicates
+" autocmd!
+
 " set the runtime path to include Vundle and initialize
 set rtp+=~/.vim/bundle/Vundle.vim
+" let path='~/.vim/bundle'
 call vundle#begin()
 " alternatively, pass a path where Vundle should install plugins
 "call vundle#begin('~/some/path/here')
@@ -11,231 +15,312 @@ call vundle#begin()
 " let Vundle manage Vundle, required
 Plugin 'gmarik/Vundle.vim'
 " }}}
+
 " Plugins {{{
-Plugin 'ap/vim-css-color'				" highlight colours in css files
-Plugin 'cakebaker/scss-syntax.vim'		" Syntax file for SCSS
+Plugin 'azmr/vim-gdb'					" simple way to interact with GDB from vim
+Plugin 'dhruvasagar/vim-table-mode'		" automatic table creator & formatter
 Plugin 'fatih/vim-go'					" Go development plugin. Install required binaries with ':GoInstallBinaries'
-Plugin 'itchyny/lightline.vim'			" improves info for statusline
-" Plugin 'jnurmine/Zenburn'				" colourscheme: low contrast 'alien fruit salad'
 Plugin 'majutsushi/tagbar'				" tags outline viewer
 Plugin 'mattn/emmet-vim'				" expands html/css tags
-Plugin 'mhinz/vim-signify'				" VCS diff in sign column
-Plugin 'shougo/neomru.vim'				" most recently used
-Plugin 'shougo/neocomplcache.vim'		" autocomplete, doesn't require Lua
-" Plugin 'shougo/neocomplete.vim'			" autocomplete, does require Lua
-Plugin 'shougo/neosnippet.vim'			" snippets engine
-	Plugin 'shougo/neosnippet-snippets'		" snippets files
-Plugin 'shougo/unite.vim'				" fuzzy search/navigate files/buffers/other arbitrary sources. NEEDS CONFIG
-Plugin 'shougo/vimfiler.vim'			" filesystem explorer
-Plugin 'shougo/vimshell.vim'			" platform independent shell (works with unite)
+Plugin 'rust-lang/rust.vim'				" rust file detection, syntax highlighting, and (optional) autoformatting
 Plugin 'scrooloose/syntastic'			" syntax checking
+Plugin 'sheerun/vim-polyglot'			" 50+ language pack
 Plugin 'sjl/gundo.vim'					" graphs the undo tree
-Plugin 'terryma/vim-expand-region'		" visually select increasingly larger/smaller regions of text (+/_)
-Plugin 'terryma/vim-multiple-cursors'	" multiple cursors with <C-n>/<C-p>/<C-x> (skip)
+Plugin 'takac/vim-hardtime'				" to help you stop repeating the basic movement keys (:HardTimeToggle)
+Plugin 'tmhedberg/matchit'				" extended % matching for HTML, LaTeX, and many other languages
 Plugin 'tpope/vim-abolish' 				" complex search & replace
+Plugin 'tpope/vim-afterimage'			" edit binary files by converting them to text equivalents
 Plugin 'tpope/vim-commentary' 			" gcc/gc* to comment lines/movement
 Plugin 'tpope/vim-fugitive' 			" git wrapper: Gstatus, Gmove etc
 Plugin 'tpope/vim-repeat' 				" allows other plugins to use '.' repeat
+Plugin 'tpope/vim-obsession'			" continuously updated session files
 Plugin 'tpope/vim-sensible' 			" basic uncontroversial .vimrc
 Plugin 'tpope/vim-speeddating' 			" C-A/C-X to increment times, dates and more
 Plugin 'tpope/vim-surround' 			" quoting/parenthesizing made simple
 Plugin 'tpope/vim-unimpaired' 			" pairs of handy bracket mappings
+Plugin 'vim-scripts/camelcasemotion'	" motion through CamelCaseWords and underscore_notation
+Plugin 'vim-scripts/YankRing.vim'		" maintains history of yanks/changes/deletes (p/P, <C-P>/<C-N>
 Plugin 'w0ng/vim-hybrid' 				" colourscheme: colour palette from Tomorrow-Night; syntax group highlighting scheme from Jellybeans; Vim code from Solarized
-
+Plugin 'wesgibbs/vim-irblack'			" colourscheme: 16 bit
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
 filetype plugin indent on    " required
-
 " To ignore plugin indent changes, instead use:
 "filetype plugin on
-"
-" Brief help
-" :PluginList       - lists configured plugins
-" :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
-" :PluginSearch foo - searches for foo; append `!` to refresh local cache
-" :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
-"
-" see :h vundle for more details or wiki for FAQ
-" Put your non-Plugin stuff after this line
 " }}}
-" Editor {{{
-	" Aesthetics {{{
-	set t_Co=256
-	colorscheme hybrid
-	" }}}
-	" Autocompetion {{{
-	" Disable AutoComplPop.
-	let g:acp_enableAtStartup = 0
-	" Use neocomplcache.
-	let g:neocomplcache_enable_at_startup = 1
-	" Use smartcase.
-	let g:neocomplcache_enable_smart_case = 1
-	" Set minimum syntax keyword length.
-	let g:neocomplcache_min_syntax_length = 2
-	let g:neocomplcache_lock_buffer_name_pattern = '\*ku\*'
 
-	" Enable heavy features.
-	" Use camel case completion.
-	"let g:neocomplcache_enable_camel_case_completion = 1
-	" Use underbar completion.
-	"let g:neocomplcache_enable_underbar_completion = 1
-	"
-	" Define dictionary.
-	let g:neocomplcache_dictionary_filetype_lists = {
-		\ 'default' : '',
-		\ 'vimshell' : $HOME.'/.vimshell_hist',
-		\ 'scheme' : $HOME.'/.gosh_completions'
-	\ }
+" Setup {{{
+cd E:\Documents\Coding
+" }}}
 
-	" Define keyword.
-	if !exists('g:neocomplcache_keyword_patterns')
-		let g:neocomplcache_keyword_patterns = {}
-	endif
-	let g:neocomplcache_keyword_patterns['default'] = '\h\w*'
+" Spaces and Tabs {{{
+set tabstop=4			" number of columns per TAB
+set shiftwidth=4		" number of columns per indent/outdent (>>/<<)
+set noexpandtab			" tabs are individual characters, not spaces
+set shiftround			" rounds indent to multiple of shiftwidth
+set copyindent			" new lines continue previous indentation
+" }}}
 
-	" Plugin key-mappings.
-	inoremap <expr><C-g> neocomplcache#undo_completion()
-	inoremap <expr><C-l> neocomplcache#complete_common_string()
+" UI {{{
+" set t_Co=256			" possibly helpful for colours?
+colorscheme hybrid		" sets colorscheme to hybrid
+set number              " show line numbers
+set showcmd             " show most recent command in bottom bar
+set cursorline          " highlight current line
+set showmatch           " highlight matching [{()}]
+set wildmenu            " visual autocomplete for command menu
+set lazyredraw          " redraw only when we need to.
+filetype indent on      " load filetype-specific indent files
+set hidden				" allows you to change out of unsaved buffers
+set textwidth=0			" no autowrapping 
 
-	" Recommended key-mappings.
-	" <CR>: close popup and save indent.
-	inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
-	function! s:my_cr_function()
-		return neocomplcache#smart_close_popup() . "\<CR>"
-		" For no inserting <CR> key.
-		"return pumvisible() ?  neocomplcache#close_popup() : '\<CR>'
+	" Statusline {{{
+	" allows InsertLeave to be triggered without ruining <c-c> for general use
+	inoremap <c-c> <Esc>
+	augroup statusline
+		autocmd!
+		autocmd InsertEnter * highlight StatusLine term=reverse cterm=reverse ctermfg=110 ctermbg=234 gui=reverse guifg=#81a2be guibg=#1d1f21
+		autocmd InsertLeave	* highlight StatusLine term=reverse cterm=reverse ctermfg=243 ctermbg=234 gui=reverse guifg=#707880 guibg=#1d1f21
+	augroup END
+
+	function! StatusLine()
+		" vim default: statusline=%<%f\ %h%m%r%=%-14.(%l,%c%V%)\ %P
+		set statusline=\ 			" pad 1 space on left
+		set statusline+=%f			" file path relative to working directory
+		set statusline+=\ 			" separator
+		set statusline+=%{FileSize()}	" file size in B/KB
+		set statusline+=\ 			" separator
+		set statusline+=%q			" quickfix/location list flag
+		set statusline+=%w			" preview flag
+		set statusline+=%h			" help doc flag
+		set statusline+=%m			" modified flag
+		set statusline+=%r			" readonly flag
+
+		set statusline+=%=			" right align all content after this
+
+		set statusline+=%{GetGitBranch()}	" git branch in the format [branch]
+		set statusline+=\ \|\ 		" separator
+		set statusline+=%3.c		" (3-padded) column number
+		set statusline+=,			" separator
+		set statusline+=%4.l/%-4.L	" (4-padded) line number/max lines
+		set statusline+=\ 			" pad 1 space on right
 	endfunction
-	" <TAB>: completion.
-	inoremap <expr><TAB>  pumvisible() ?  "\<C-n>" : "\<TAB>"
-	" <C-h>, <BS>: close popup and delete backword char.
-	inoremap <expr><C-h> neocomplcache#smart_close_popup()."\<C-h>"
-	inoremap <expr><BS> neocomplcache#smart_close_popup()."\<C-h>"
-	inoremap <expr><C-y> neocomplcache#close_popup()
-	inoremap <expr><C-e> neocomplcache#cancel_popup()
-	" Close popup by <Space>.
-	"inoremap <expr><Space> pumvisible() ? neocomplcache#close_popup() : "\<Space>"
 
-	" For cursor moving in insert mode(Not recommended)
-	"inoremap <expr><Left> neocomplcache#close_popup() . '\<Left>'
-	"inoremap <expr><Right> neocomplcache#close_popup() . '\<Right>'
-	"inoremap <expr><Up> neocomplcache#close_popup() . '\<Up>'
-	"inoremap <expr><Down> neocomplcache#close_popup() . '\<Down>'
-	" Or set this.
-	"let g:neocomplcache_enable_cursor_hold_i = 1
-	" Or set this.
-	"let g:neocomplcache_enable_insert_char_pre = 1
-
-	" AutoComplPop like behavior.
-	"let g:neocomplcache_enable_auto_select = 1
-
-	" Shell like behavior(not recommended).
-	"set completeopt+=longest
-	"let g:neocomplcache_enable_auto_select = 1
-	"let g:neocomplcache_disable_auto_complete = 1
-	"inoremap <expr><TAB>  pumvisible() ?
-	"\<Down>" : '\<C-x>\<C-u>'
-
-	" Enable omni completion.
-	autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
-	autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
-	autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
-	autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
-	autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
-
-	" Enable heavy omni completion.
-	if !exists('g:neocomplcache_force_omni_patterns')
-		let g:neocomplcache_force_omni_patterns = {}
-	endif
-	let g:neocomplcache_force_omni_patterns.php = '[^. \t]->\h\w*\|\h\w*::'
-	let g:neocomplcache_force_omni_patterns.c = '[^.[:digit:] *\t]\%(\.\|->\)'
-	let g:neocomplcache_force_omni_patterns.cpp = '[^.[:digit:] *\t]\%(\.\|->\)\|\h\w*::'
-
-	" For perlomni.vim setting.
-	" https://github.com/c9s/perlomni.vim
-	let g:neocomplcache_force_omni_patterns.perl = '\h\w*->\h\w*\|\h\w*::'
+	call StatusLine()
+	" }}}
 " }}}
-" Files {{{
-set title
-set splitbelow
-set splitright
+
+" Search {{{
+set incsearch           " search as characters are entered
+set ignorecase			" case insensitive searches...
+set smartcase			" ... except when they include capitals
+" set hlsearch            " highlight matches
+" nnoremap / :nohl<CR>/	" removes highlight on next find
+" }}}
+
+" Folding {{{
+set foldenable		 	" enable fonding
+set foldmethod=marker	" fold by markers
+set foldlevelstart=10   " open most folds by default
+" }}}
+
+" Movement {{{
+" move vertically by visual line and remap alt movement to literal lines
+nnoremap j gj
+nnoremap k gk
+nnoremap gj j
+nnoremap gk k
+" }}}
+
+" Leader Shortcuts {{{
+" make space leader, keeping a viable showcmd
+map <space> <leader>
+
+" use undo tree (super undo)
+nnoremap <leader>u :GundoToggle<CR>
+
+" quick save
+nnoremap <Leader>w :w<CR>
+
+" quick edit .vimrc
+nnoremap <leader>ve :e $MYVIMRC<cr>
+nnoremap <leader>vv :vsplit $MYVIMRC<cr>
+nnoremap <leader>vh :hsplit $MYVIMRC<cr>
+
+" quick source .vimrc, sourcing normally changes working directory to default
+nnoremap <leader>vs :source $MYVIMRC<cr>
+
+" copy and paste to system clipboard
+vnoremap <Leader>y "+y
+vnoremap <Leader>d "+d
+nnoremap <Leader>p "+p
+nnoremap <Leader>P "+P
+vnoremap <Leader>p "+p
+vnoremap <Leader>P "+P
+
+" paste replacing selection TODO: turn into plugin and put on github
+nnoremap <leader>cp :set operatorfunc=ChangePut<cr>g@
+vnoremap <leader>cp :<c-u>call ChangePut(visualmode())<cr>
+
+" TODO: implement repeat.vim
+" TODO: take from specific register
+function! ChangePut(type)
+	if a:type ==# 'v'
+		execute 'normal! `<v`>"_dP'
+	elseif a:type ==# 'V'
+		execute "normal! '<V'>\"_dP"
+	elseif a:type ==# 'char'
+		execute 'normal! `[v`]"_dP'
+	else
+		return
+	endif
+endfunction
+
+" call QuickGDB with the option of arguments
+nnoremap <leader>g :call QuickGDB()<left>
+" }}}
+
+" Misc Mappings {{{
+" make Y follow same pattern as C and D... yank to end of line
+nnoremap Y y$
+" save when forgot sudo
+cnoremap sudow w !sudo tee % >/dev/null
+" }}}
+
+" Languages {{{
+	" Go {{{
+	let g:go_fmt_autosave = 1
+	let g:go_fmt_command = "goimports"
+
+	let g:go_snippet_engine = "neosnippet"
+
+	let g:go_highlight_functions = 1
+	" let g:go_highlight_methods = 1
+	let g:go_highlight_structs = 1
+
+	" show type info (:GoInfo) for word under cursor 
+	let g:go_auto_type_info = 1
+	" }}}
+
+	" Git {{{
+	augroup git
+		autocmd!
+		autocmd FileType gitcommit setlocal textwidth=72
+	augroup END
+	" }}}
+
+	" Markdown {{{
+		augroup ft_md
+			autocmd!
+			" read '.md' files as Markdown, not Modula-2 
+			autocmd BufNewFile,BufReadPost *.md set filetype=markdown
+			" operator inner and around headings
+			autocmd FileType markdown :onoremap <buffer> i= :<c-u>execute "normal! ?^==\\+$\r:nohlsearch\rkvg_"<cr>
+			autocmd FileType markdown :onoremap <buffer> a= :<c-u>execute "normal! ?^==\\+$\r:nohlsearch\rg_vk0"<cr>
+			autocmd FileType markdown :onoremap <buffer> i- :<c-u>execute "normal! ?^--\\+$\r:nohlsearch\rkvg_"<cr>
+			autocmd FileType markdown :onoremap <buffer> a- :<c-u>execute "normal! ?^--\\+$\r:nohlsearch\rg_vk0"<cr>
+			autocmd FileType markdown :onoremap <buffer> i1 :<c-u>execute "normal! ?^# \\=\r:nohlsearch\rwvg_"<cr>
+			autocmd FileType markdown :onoremap <buffer> a1 :<c-u>execute "normal! ?^# \\=\r:nohlsearch\rvg_"<cr>
+			autocmd FileType markdown :onoremap <buffer> i2 :<c-u>execute "normal! ?^## \\=\r:nohlsearch\rwvg_"<cr>
+			autocmd FileType markdown :onoremap <buffer> a2 :<c-u>execute "normal! ?^## \\=\r:nohlsearch\rvg_"<cr>
+			autocmd FileType markdown :onoremap <buffer> i3 :<c-u>execute "normal! ?^### \\=\r:nohlsearch\rwvg_"<cr>
+			autocmd FileType markdown :onoremap <buffer> a3 :<c-u>execute "normal! ?^### \\=\r:nohlsearch\rvg_"<cr>
+			autocmd FileType markdown :onoremap <buffer> i4 :<c-u>execute "normal! ?^#### \\=\r:nohlsearch\rwvg_"<cr>
+			autocmd FileType markdown :onoremap <buffer> a4 :<c-u>execute "normal! ?^#### \\=\r:nohlsearch\rvg_"<cr>
+			autocmd FileType markdown :onoremap <buffer> i5 :<c-u>execute "normal! ?^##### \\=\r:nohlsearch\rwvg_"<cr>
+			autocmd FileType markdown :onoremap <buffer> a5 :<c-u>execute "normal! ?^##### \\=\r:nohlsearch\rvg_"<cr>
+			autocmd FileType markdown :onoremap <buffer> i6 :<c-u>execute "normal! ?^###### \\=\r:nohlsearch\rwvg_"<cr>
+			autocmd FileType markdown :onoremap <buffer> a6 :<c-u>execute "normal! ?^###### \\=\r:nohlsearch\rvg_"<cr>
+		augroup END
+	" }}}
+
+	" Rust {{{
+	augroup ft_rust
+		" remove any duplicates of this group
+		" au!
+		" exchange _a_ for _b_ (snippet-like)
+		" autocmd FileType rust :iabbrev <buffer> _a_ _b_
+		autocmd!
+		autocmd FileType rust nnoremap <buffer> <F7> :!cargo run<cr>
+	augroup END
+	" }}}
+
+	" Vimscript {{{
+		augroup ft_vim
+			autocmd!
+			autocmd FileType vim setlocal foldmethod=marker
+			autocmd FileType vim setlocal nowrap
+			" create augroup block from aug
+			autocmd FileType vim :iabbrev <buffer> aug augroupa<bs><cr>augroupa<bs> END<up><end>
+			autocmd FileType vim :iabbrev <buffer> iff ifa<bs><cr>endifa<bs><up><end>
+		augroup END
+	" }}}
+" }}}
+
+" Syntax {{{
+" syntastic recommended settings:
+" set statusline+=%#warningmsg#
+" set statusline+=%{SyntasticStatuslineFlag()}
+" set statusline+=%*
+
+" let g:syntastic_always_populate_loc_list = 1
+" let g:syntastic_auto_loc_list = 1
+" let g:syntastic_check_on_open = 1
+" let g:syntastic_check_on_wq = 0
+" }}}
+
+" Tags {{{
+" toggle tagbar with F8
+nnoremap <F8> :TagbarToggle<CR>
+" }}}
+
+" Windows {{{
+set title			" sets terminal title to filename
+set splitbelow		" new splits go below
+set splitright		" new vsplits go right
+
+" Arrow keys resize windows
+nnoremap <left>  :3wincmd <<cr>
+nnoremap <right> :3wincmd ><cr>
+nnoremap <up>    :3wincmd +<cr>
+nnoremap <down>  :3wincmd -<cr>
+
+" simplify navigating windows with <C-[HJKL]>
 nnoremap <C-J> <C-W><C-J>
 nnoremap <C-K> <C-W><C-K>
 nnoremap <C-L> <C-W><C-L>
 nnoremap <C-H> <C-W><C-H>
 " }}}
-" Statusline {{{
-let g:lightline = {
-			\'colorscheme': 'wombat',
-			\'active': {
-			\	'left': [	[ 'mode', 'paste' ],
-			\				[ 'fugitive', 'filename', 'readonly', 'modified' ] ]
-			\},
-			\'component': {
-			\	'fugitive': '%{exists("*fugitive#head")?fugitive#head():""}'
-			\},
-			\'component_visible_condition': {
-			\	'fugitive': '(exists("*fugitive#head") && ""!=fugitive#head())'
-			\}
-			\}
-" }}}
-" Syntax {{{
-" syntastic recommended settings:
-set statusline+=%#warningmsg#
-set statusline+=%{SyntasticStatuslineFlag()}
-set statusline+=%*
 
-let g:syntastic_always_populate_loc_list = 1
-let g:syntastic_auto_loc_list = 1
-let g:syntastic_check_on_open = 1
-let g:syntastic_check_on_wq = 0
-" }}}
-" Tabs {{{
-set tabstop=4
-set shiftwidth=4
-set shiftround
-set copyindent
-" }}}
-" Tags {{{
-" let g:tagbar_ctags_bin = "e:/Program Files/ctags58/ctags.exe"
-nmap <F8> :TagbarToggle<CR>
-	" Go Ctags {{{
-	" let g:tagbar_type_go = {
-	" 	\ 'ctagstype' : 'go',
-	" 	\ 'kinds'     : [
-	" 		\ 'p:package',
-	" 		\ 'i:imports:1',
-	" 		\ 'c:constants',
-	" 		\ 'v:variables',
-	" 		\ 't:types',
-	" 		\ 'n:interfaces',
-	" 		\ 'w:fields',
-	" 		\ 'e:embedded',
-	" 		\ 'm:methods',
-	" 		\ 'r:constructor',
-	" 		\ 'f:functions'
-	" 	\ ],
-	" 	\ 'sro' : '.',
-	" 	\ 'kind2scope' : {
-	" 		\ 't' : 'ctype',
-	" 		\ 'n' : 'ntype'
-	" 	\ },
-	" 	\ 'scope2kind' : {
-	" 		\ 'ctype' : 't',
-	" 		\ 'ntype' : 'n'
-	" 	\ },
-	" 	\ 'ctagsbin' : 'gotags'
-	" 	\ 'ctagsargs' : '-sort -silent'
-	" 	\ }
-	" }}}
+" Autocommands {{{
+augroup misc
+	autocmd!
+	" automatically leave insert mode after 'updatetime' milliseconds of inaction
+	autocmd CursorHoldI * stopinsert
+
+	" set 'updatetime' to 5 seconds when in insert mode
+	autocmd InsertEnter * let updaterestore=&updatetime | set updatetime=5000
+	autocmd InsertLeave * let &updatetime=updaterestore
+augroup END
 " }}}
 
-" save when forgot sudo
-cnoremap sudow w !sudo tee % >/dev/null
+" Functions {{{
+function! GetGitBranch() " requires fugitive.vim
+	if fugitive#statusline() =~# '\m(\(.*\))'
+		return '['.matchlist(fugitive#statusline(), '(\(.*\))')[1].']'
+	endif
+	return ''
+endfunction
 
-set number " line numbers
-set foldmethod=marker
-nnoremap ; :
-" }}}
-" File tree {{{
-let g:vimfiler_as_default_explorer = 1
+function! FileSize()
+     let bytes = getfsize(expand('%:p'))
+     if bytes <= 0
+         return ''
+     endif
+     if bytes < 1024
+         return bytes
+     else
+         return '(' . (bytes / 1024) . 'kb' . ')'
+     endif
+endfunction
 " }}}
