@@ -1,0 +1,16 @@
+[gui]
+[user]
+	email = azmreece@gmail.com
+	name = Andrew Reece
+[gui]
+[color]
+	diff = auto
+	status = auto
+	branch = auto
+[push]
+	defaul = simple
+	default = simple
+[gui]
+	recentrepo = E:/gocode/src/bitbucket.org/azmr/ruet.in
+[core]
+	excludesfile = ~/.gitignore
