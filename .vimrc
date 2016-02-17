@@ -53,7 +53,11 @@ filetype plugin indent on    " required
 " }}}
 
 " Setup {{{
-cd E:\Documents\Coding
+if has('win32')
+	cd E:\Documents\Coding
+elseif has('unix')
+	cd ~/code
+endif
 " }}}
 
 " Spaces and Tabs {{{
@@ -65,7 +69,9 @@ set copyindent			" new lines continue previous indentation
 " }}}
 
 " UI {{{
-" set t_Co=256			" possibly helpful for colours?
+if &term ==# 'linux'
+	set t_Co=256			" allows fancy colorschemes in terminal
+endif
 colorscheme hybrid		" sets colorscheme to hybrid
 set number              " show line numbers
 set showcmd             " show most recent command in bottom bar
