@@ -1,5 +1,5 @@
 " Preamble {{{
-set nocompatible              " be iMproved, required
+set nocompatible
 filetype off                  " required
 
 " avoid autocmd duplicates
@@ -17,11 +17,14 @@ Plugin 'gmarik/Vundle.vim'
 " }}}
 
 " Plugins {{{
+Plugin 'ajh17/VimCompletesMe'			" minimal tab completion
 Plugin 'azmr/vim-gdb'					" simple way to interact with GDB from vim
 Plugin 'dhruvasagar/vim-table-mode'		" automatic table creator & formatter
 Plugin 'fatih/vim-go'					" Go development plugin. Install required binaries with ':GoInstallBinaries'
-Plugin 'majutsushi/tagbar'				" tags outline viewer
+Plugin 'junegunn/rainbow_parentheses.vim' " rainbow parens
+Plugin 'majutsushi/tagbar'				" tags outline viewer ***Requires Ctags***
 Plugin 'mattn/emmet-vim'				" expands html/css tags
+Plugin 'mhinz/vim-signify'				" VCS diff in sign column
 Plugin 'rust-lang/rust.vim'				" rust file detection, syntax highlighting, and (optional) autoformatting
 Plugin 'scrooloose/syntastic'			" syntax checking
 Plugin 'sheerun/vim-polyglot'			" 50+ language pack
@@ -188,6 +191,13 @@ cnoremap sudow w !sudo tee % >/dev/null
 " }}}
 
 " Languages {{{
+	" C-like {{{
+	augroup c_like
+		autocmd!
+		autocmd FileType c,go,javascript,rust,vim :inoremap <buffer> {<cr> {<cr>}<esc>O
+	augroup END
+	" }}}
+	
 	" Go {{{
 	let g:go_fmt_autosave = 1
 	let g:go_fmt_command = "goimports"
@@ -272,6 +282,7 @@ cnoremap sudow w !sudo tee % >/dev/null
 " Tags {{{
 " toggle tagbar with F8
 nnoremap <F8> :TagbarToggle<CR>
+let g:tagbar_ctags_bin = "e:/Program Files/ctags58/ctags.exe"
 " }}}
 
 " Windows {{{
