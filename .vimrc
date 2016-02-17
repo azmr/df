@@ -81,7 +81,16 @@ set wildmenu            " visual autocomplete for command menu
 set lazyredraw          " redraw only when we need to.
 filetype indent on      " load filetype-specific indent files
 set hidden				" allows you to change out of unsaved buffers
-set textwidth=0			" no autowrapping 
+set textwidth=0			" no autowrapping
+
+	" Listchars {{{
+	" toggle with set list!
+	set listchars=tab:\|\ 		" tabs
+	set listchars+=trail:-		" trailing spaces
+	set listchars+=extends:>	" characters off screen to right
+	set listchars+=precedes:<	" characters off screen to left
+	set listchars+=nbsp:_ 		" non-breaking spaces
+	" }}}
 
 	" Statusline {{{
 	" allows InsertLeave to be triggered without ruining <c-c> for general use
