@@ -17,7 +17,6 @@ Plugin 'gmarik/Vundle.vim'
 " }}}
 
 " Plugins {{{
-Plugin 'ajh17/VimCompletesMe'			" minimal tab completion
 Plugin 'azmr/vim-gdb'					" simple way to interact with GDB from vim
 Plugin 'dhruvasagar/vim-table-mode'		" automatic table creator & formatter
 Plugin 'fatih/vim-go'					" Go development plugin. Install required binaries with ':GoInstallBinaries'
@@ -31,19 +30,19 @@ Plugin 'sheerun/vim-polyglot'			" 50+ language pack
 Plugin 'sjl/gundo.vim'					" graphs the undo tree
 Plugin 'takac/vim-hardtime'				" to help you stop repeating the basic movement keys (:HardTimeToggle)
 Plugin 'tmhedberg/matchit'				" extended % matching for HTML, LaTeX, and many other languages
-Plugin 'tpope/vim-abolish' 				" complex search & replace
+Plugin 'tpope/vim-abolish'				" complex search & replace
 Plugin 'tpope/vim-afterimage'			" edit binary files by converting them to text equivalents
-Plugin 'tpope/vim-commentary' 			" gcc/gc* to comment lines/movement
-Plugin 'tpope/vim-fugitive' 			" git wrapper: Gstatus, Gmove etc
-Plugin 'tpope/vim-repeat' 				" allows other plugins to use '.' repeat
+Plugin 'tpope/vim-commentary'			" gcc/gc* to comment lines/movement
+Plugin 'tpope/vim-fugitive'				" git wrapper: Gstatus, Gmove etc
+Plugin 'tpope/vim-repeat'				" allows other plugins to use '.' repeat
 Plugin 'tpope/vim-obsession'			" continuously updated session files
-Plugin 'tpope/vim-sensible' 			" basic uncontroversial .vimrc
-Plugin 'tpope/vim-speeddating' 			" C-A/C-X to increment times, dates and more
-Plugin 'tpope/vim-surround' 			" quoting/parenthesizing made simple
-Plugin 'tpope/vim-unimpaired' 			" pairs of handy bracket mappings
+Plugin 'tpope/vim-sensible'				" basic uncontroversial .vimrc
+Plugin 'tpope/vim-speeddating'			" C-A/C-X to increment times, dates and more
+Plugin 'tpope/vim-surround'				" quoting/parenthesizing made simple
+Plugin 'tpope/vim-unimpaired'			" pairs of handy bracket mappings
 Plugin 'vim-scripts/camelcasemotion'	" motion through CamelCaseWords and underscore_notation
 Plugin 'vim-scripts/YankRing.vim'		" maintains history of yanks/changes/deletes (p/P, <C-P>/<C-N>
-Plugin 'w0ng/vim-hybrid' 				" colourscheme: colour palette from Tomorrow-Night; syntax group highlighting scheme from Jellybeans; Vim code from Solarized
+Plugin 'w0ng/vim-hybrid'				" colourscheme: colour palette from Tomorrow-Night; syntax group highlighting scheme from Jellybeans; Vim code from Solarized
 Plugin 'wesgibbs/vim-irblack'			" colourscheme: 16 bit
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
@@ -53,6 +52,7 @@ filetype plugin indent on    " required
 " }}}
 
 " Setup {{{
+set fileformats=unix,dos	" use unix line endings by default (prevents breaking)
 if has('win32')
 	cd E:\Documents\Coding
 elseif has('unix')
@@ -70,7 +70,7 @@ set copyindent			" new lines continue previous indentation
 
 " UI {{{
 if &term ==# 'linux'
-	set t_Co=256			" allows fancy colorschemes in terminal
+	set t_Co=256		" allows fancy colorschemes in terminal
 endif
 colorscheme hybrid		" sets colorscheme to hybrid
 set number              " show line numbers
@@ -85,11 +85,11 @@ set textwidth=0			" no autowrapping
 
 	" Listchars {{{
 	" toggle with set list!
-	set listchars=tab:\|\ 		" tabs
+	set listchars=tab:\|\		" tabs
 	set listchars+=trail:-		" trailing spaces
 	set listchars+=extends:>	" characters off screen to right
 	set listchars+=precedes:<	" characters off screen to left
-	set listchars+=nbsp:_ 		" non-breaking spaces
+	set listchars+=nbsp:_		" non-breaking spaces
 	" }}}
 
 	" Statusline {{{
@@ -137,7 +137,7 @@ set smartcase			" ... except when they include capitals
 " }}}
 
 " Folding {{{
-set foldenable		 	" enable fonding
+set foldenable			" enable folding
 set foldmethod=marker	" fold by markers
 set foldlevelstart=10   " open most folds by default
 " }}}
@@ -321,6 +321,9 @@ nnoremap <C-H> <C-W><C-H>
 " Autocommands {{{
 augroup misc
 	autocmd!
+	" format all opened files for unix
+	autocmd BufRead,BufNewFile * set fileformat=unix
+	
 	" automatically leave insert mode after 'updatetime' milliseconds of inaction
 	autocmd CursorHoldI * stopinsert
 
