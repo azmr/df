@@ -180,6 +180,11 @@ vnoremap <Leader>P "+P
 nnoremap <leader>cp :set operatorfunc=ChangePut<cr>g@
 vnoremap <leader>cp :<c-u>call ChangePut(visualmode())<cr>
 
+" search across open buffers (and echo found line)
+nnoremap <leader>b/ :bufdo //e <bar> echo expand('.')<c-left><c-left><c-left><c-left><right>
+" search and replace across open buffers
+nnoremap <leader>bs :bufdo %s//ge<left><left><left>
+
 " TODO: implement repeat.vim
 " TODO: take from specific register
 function! ChangePut(type)
@@ -321,14 +326,14 @@ nnoremap <C-H> <C-W><C-H>
 " Autocommands {{{
 augroup misc
 	autocmd!
-	" format all opened files for unix
-	autocmd BufRead,BufNewFile * set fileformat=unix
+	" format all opened (non readonly) files for unix
+	autocmd BufRead,BufNewFile * if &readonly==#0|set fileformat=unix
 	
 	" automatically leave insert mode after 'updatetime' milliseconds of inaction
 	autocmd CursorHoldI * stopinsert
 
 	" set 'updatetime' to 5 seconds when in insert mode
-	autocmd InsertEnter * let updaterestore=&updatetime | set updatetime=5000
+	autocmd InsertEnter * let updaterestore=&updatetime | set updatetime=6000
 	autocmd InsertLeave * let &updatetime=updaterestore
 augroup END
 " }}}
@@ -353,3 +358,12 @@ function! FileSize()
      endif
 endfunction
 " }}}
+
+function! BufdoSearch(query)
+	let l:search=':bufdo /'.a:query.'/e'
+	echom l:search
+	split ___BUFSEARCHES___
+	exec 'redir !> ___BUFSEARCHES___ | '.l:search.' | redir END'
+	"let g:bsearchresult=substitute(@m, '\(E\d*:.\+\n\)|\(search .\+TOP\n\)', '', '')
+	" echom l:result
+endfunction
