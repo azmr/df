@@ -41,9 +41,11 @@ Plugin 'tpope/vim-speeddating'			" C-A/C-X to increment times, dates and more
 Plugin 'tpope/vim-surround'				" quoting/parenthesizing made simple
 Plugin 'tpope/vim-unimpaired'			" pairs of handy bracket mappings
 Plugin 'vim-scripts/camelcasemotion'	" motion through CamelCaseWords and underscore_notation
-Plugin 'vim-scripts/YankRing.vim'		" maintains history of yanks/changes/deletes (p/P, <C-P>/<C-N>
+Plugin 'vim-scripts/TagHighlight'		" highlights struct, variable names etc
 Plugin 'w0ng/vim-hybrid'				" colourscheme: colour palette from Tomorrow-Night; syntax group highlighting scheme from Jellybeans; Vim code from Solarized
-Plugin 'wesgibbs/vim-irblack'			" colourscheme: 16 bit
+" Plugin 'xolox/vim-easytags'				" tag generation and highlighting
+" Plugin 'xolox/vim-misc'					" xolox lib
+"Plugin 'wesgibbs/vim-irblack'			" colourscheme: 16 bit
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
 filetype plugin indent on    " required
@@ -126,6 +128,13 @@ set textwidth=0			" no autowrapping
 
 	call StatusLine()
 	" }}}
+
+	" Diff {{{
+	" ignore whitespace
+	set diffopt=filler
+	set diffopt+=iwhite
+	set diffopt+=icase
+	" }}}
 " }}}
 
 " Search {{{
@@ -150,21 +159,24 @@ nnoremap gj j
 nnoremap gk k
 " }}}
 
-" Leader Shortcuts {{{
+" Leader Shortcut Mappings {{{
 " make space leader, keeping a viable showcmd
 map <space> <leader>
-
+" cycle buffers
+nnoremap <leader>bn :bnext<cr>
+nnoremap <leader>bp :bprev<cr>
+nnoremap <leader>bN :bLast<cr>
+nnoremap <leader>bP :bfirst<cr>
+" change directory to current file's
+nnoremap <leader>% :cd %:p:h<cr>
 " use undo tree (super undo)
 nnoremap <leader>u :GundoToggle<CR>
-
 " quick save
 nnoremap <Leader>w :w<CR>
-
 " quick edit .vimrc
 nnoremap <leader>ve :e $MYVIMRC<cr>
 nnoremap <leader>vv :vsplit $MYVIMRC<cr>
 nnoremap <leader>vh :hsplit $MYVIMRC<cr>
-
 " quick source .vimrc, sourcing normally changes working directory to default
 nnoremap <leader>vs :source $MYVIMRC<cr>
 
@@ -204,17 +216,91 @@ nnoremap <leader>g :call QuickGDB()<left>
 " }}}
 
 " Misc Mappings {{{
+" move lines up and down
+nnoremap <c-k> "lddk"lP
+nnoremap <c-n> "ldd"lp
+" move WORDS left and right (doesn't quite work currently)
+" nnoremap <c-l> "wdaWEl"wph
+" nnoremap <c-h> "wdaWBh"wP
+" swap n and j
+	" 'n'ext line, this line 'N' the next one
+noremap n j
+noremap N J
+noremap <c-w>N <c-w>J
+	" 'j'ump to next find, 'J'ump to previous find
+noremap j n
+noremap J N
+noremap <c-w>J <c-w>N
+" swap ; and :
+nnoremap ; :
+vnoremap ; :
+nnoremap : ;
+vnoremap : ;
 " make Y follow same pattern as C and D... yank to end of line
 nnoremap Y y$
 " save when forgot sudo
 cnoremap sudow w !sudo tee % >/dev/null
+" allow the . to execute once for each line of a visual selection
+vnoremap . :normal .<CR>
+" gp to select previously pasted text in previous selection mode (linewise, blockwise etc)
+nnoremap <expr> gp '`[' . strpart(getregtype(), 0, 1) . '`]'
+" open location list with <F8>
+nnoremap <F8> :lopen<cr>
+" apply @@ or . to each line in a visual selection
+vnoremap @@ :normal @@<cr>
+vnoremap . :normal .<cr>
+" echo highlighting group 
+noremap <F3> :echo synIDattr(synID(line("."),col("."),1),"name")<cr>
 " }}}
 
 " Languages {{{
+	" C {{{
+" Compiler message highlighting
+	highlight! link CompileError SpellBad
+	highlight! link CompileWarning SpellCap
+	highlight! link CompileComplete Special
+
+	augroup c
+		autocmd!
+		autocmd FileType c setlocal foldmethod=syntax
+	augroup END
+	augroup c
+		autocmd!
+		" update tags for highlighting
+		autocmd BufNewFile,BufReadPost *.h set filetype=c
+		autocmd FileType c nnoremap <buffer> <F11> :w<cr>:silent !ctags --format=2 --excmd=pattern --extra= --fields=nksaSmt --c-kinds=-m *.c *.h<cr>:UpdateTypesFileOnly<CR>
+		autocmd FileType c inoremap <buffer> #if<space> #if <end><cr>#else<cr>#endif<up><up><end>
+
+	augroup END
+	if has('win32')
+		augroup c_win
+			autocmd!
+			" \ms to search msdn for word under cursor
+			autocmd FileType c nnoremap <buffer> <leader>ms "iyiw:!start "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" https://social.msdn.microsoft.com/search/en-US/windows.html?query=<c-r>i<cr>
+			autocmd FileType c nnoremap <buffer> <F5> :silent !"E:\Documents\Coding\C\build\.exe"<left><left><left><left><left>
+			autocmd FileType c nnoremap <buffer> <F6> :w \| call CompileCAsync()<cr>
+			autocmd FileType c nnoremap <buffer> <F7> :w \| silent !E:\Documents\Coding\C\shell.bat && build.bat && devenv<cr>
+		augroup END
+	endif
+	" }}}
+
+	" C++ {{{
+	if has('win32')
+		augroup cpp_win
+			autocmd!
+			autocmd FileType cpp nnoremap <buffer> <F5> :silent !"E:\Documents\Coding\C\build\.exe"<left><left><left><left><left>
+			autocmd FileType cpp nnoremap <buffer> <F6> :w \| !E:\Documents\Coding\C\shell.bat && build.bat<cr>
+			autocmd FileType cpp nnoremap <buffer> <F7> :w \| silent !E:\Documents\Coding\C\shell.bat && build.bat && devenv<cr>
+		augroup END
+	endif
+	" }}}
+
+
 	" C-like {{{
 	augroup c_like
 		autocmd!
-		autocmd FileType c,go,javascript,rust,vim :inoremap <buffer> {<cr> {<cr>}<esc>O
+		autocmd FileType c,cpp,go,javascript,rust,vim :inoremap <buffer> {<cr> {<cr>}<esc>O
+		autocmd FileType c,cpp,go,javascript,rust,vim setlocal foldmethod=syntax
 	augroup END
 	" }}}
 	
@@ -236,6 +322,13 @@ cnoremap sudow w !sudo tee % >/dev/null
 	augroup git
 		autocmd!
 		autocmd FileType gitcommit setlocal textwidth=72
+	augroup END
+	" }}}
+
+	" Javascript {{{
+	augroup ft_js
+		autocmd!
+		autocmd FileType javascript nnoremap <buffer> <F7> :w \| silent !explorer index.html<cr>
 	augroup END
 	" }}}
 
@@ -261,6 +354,16 @@ cnoremap sudow w !sudo tee % >/dev/null
 			autocmd FileType markdown :onoremap <buffer> a5 :<c-u>execute "normal! ?^##### \\=\r:nohlsearch\rvg_"<cr>
 			autocmd FileType markdown :onoremap <buffer> i6 :<c-u>execute "normal! ?^###### \\=\r:nohlsearch\rwvg_"<cr>
 			autocmd FileType markdown :onoremap <buffer> a6 :<c-u>execute "normal! ?^###### \\=\r:nohlsearch\rvg_"<cr>
+			autocmd FileType markdown :nnoremap <buffer> <leader>= o======================================================================================================<c-c>khjllDk
+			autocmd FileType markdown :nnoremap <buffer> <leader>- o------------------------------------------------------------------------------------------------------<c-c>khjllDk
+			autocmd FileType markdown :nnoremap <buffer> <leader><leader>= o======================================================================================================<cr><c-c>k$khjllDk
+			autocmd FileType markdown :nnoremap <buffer> <leader><leader>- o------------------------------------------------------------------------------------------------------<cr><c-c>k$khjllDk
+			autocmd FileType markdown :nnoremap <buffer> <leader>1 I# <c-c>
+			autocmd FileType markdown :nnoremap <buffer> <leader>2 I## <c-c>
+			autocmd FileType markdown :nnoremap <buffer> <leader>3 I### <c-c>
+			autocmd FileType markdown :nnoremap <buffer> <leader>4 I#### <c-c>
+			autocmd FileType markdown :nnoremap <buffer> <leader>5 I##### <c-c>
+			autocmd FileType markdown :nnoremap <buffer> <leader>6 I###### <c-c>
 		augroup END
 	" }}}
 
@@ -293,16 +396,34 @@ cnoremap sudow w !sudo tee % >/dev/null
 " set statusline+=%{SyntasticStatuslineFlag()}
 " set statusline+=%*
 
-" let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_always_populate_loc_list = 1
 " let g:syntastic_auto_loc_list = 1
-" let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_open = 1
 " let g:syntastic_check_on_wq = 0
 " }}}
 
 " Tags {{{
-" toggle tagbar with F8
-nnoremap <F8> :TagbarToggle<CR>
+" toggle tagbar with F9
+nnoremap <F9> :TagbarToggle<CR>
 let g:tagbar_ctags_bin = "e:/Program Files/ctags58/ctags.exe"
+
+" easytags settings
+" let g:easytags_auto_update = 0
+
+" Tag Highlight settings
+if ! exists('g:TagHighlightSettings')
+	let g:TagHighlightSettings = {}
+endif
+let g:TagHighlightSettings['CtagsExecutable'] = 'e:/Program Files/ctags58/ctags.exe'
+let g:TagHighlightSettings['PythonVariantPriority'] = ["compiled", "python", "if_pyth3", "if_pyth"]
+let g:TagHighlightSettings['LanguageDetectionMethods'] = ["FileType", "Extension", "Syntax"]
+
+hi! link cTagsMember Ignore
+hi! link CTagsDefinedName PreProc
+hi! link CTagsGlobalVariable Identifier
+hi! link cOperator Statement
+
+" used for library: C:\Program Files (x86)\Windows Kits\8.1\Include>ctags --format=2 --excmd=pattern --extra=fq --fields=nksaSmt --c-kinds=cntse --recurse=yes
 " }}}
 
 " Windows {{{
@@ -316,18 +437,23 @@ nnoremap <right> :3wincmd ><cr>
 nnoremap <up>    :3wincmd +<cr>
 nnoremap <down>  :3wincmd -<cr>
 
-" simplify navigating windows with <C-[HJKL]>
-nnoremap <C-J> <C-W><C-J>
-nnoremap <C-K> <C-W><C-K>
+" simplify navigating windows with <C-[arrow]>
+nnoremap <C-down> <C-W><C-J>
+nnoremap <C-up> <C-W><C-K>
+nnoremap <C-right> <C-W><C-L>
+nnoremap <C-left> <C-W><C-H>
+
 nnoremap <C-L> <C-W><C-L>
 nnoremap <C-H> <C-W><C-H>
+
+" create windows in specified direction
 " }}}
 
 " Autocommands {{{
 augroup misc
 	autocmd!
 	" format all opened (non readonly) files for unix
-	autocmd BufRead,BufNewFile * if &readonly==#0|set fileformat=unix
+	autocmd BufRead,BufNewFile * if &readonly==#0 && &modifiable==#1|set fileformat=unix
 	
 	" automatically leave insert mode after 'updatetime' milliseconds of inaction
 	autocmd CursorHoldI * stopinsert
@@ -352,9 +478,9 @@ function! FileSize()
          return ''
      endif
      if bytes < 1024
-         return bytes
+         return '(' . bytes . 'B' . ')'
      else
-         return '(' . (bytes / 1024) . 'kb' . ')'
+         return '(' . (bytes / 1024) . 'kB' . ')'
      endif
 endfunction
 " }}}
@@ -367,3 +493,41 @@ function! BufdoSearch(query)
 	"let g:bsearchresult=substitute(@m, '\(E\d*:.\+\n\)|\(search .\+TOP\n\)', '', '')
 	" echom l:result
 endfunction
+
+function! CompileCSync()
+    " Get the bytecode.
+    if has('win32')
+		let result = system('E:\Documents\Coding\C\shell.bat && build.bat')
+	endif
+
+    " Open a new split and set it up.
+    split __C_Compilation_Result__
+    normal! ggdG
+    " setlocal filetype=
+    setlocal buftype=nofile
+
+    " Insert the bytecode.
+    call append(0, split(result, '\v\n'))
+endfunction
+
+" TODO: input lines progressively rather than all in one go
+function! CompileCAsync()
+	let temp_file = tempname()
+	exec 'silent !start cmd /c "E:\Documents\Coding\C\shell.bat & build.bat > '.temp_file.
+				\ ' & vim --servername '.v:servername.' --remote-expr "GetAsyncText('."'".temp_file."')\""
+endfunction
+
+function! GetAsyncText(temp_file_name)
+    vsplit __C_Compilation_Result__
+    normal! ggdG
+    setlocal filetype=compilation_message
+    setlocal buftype=nofile
+	syntax keyword CompileError fatal error
+	syntax keyword CompileWarning warning
+	syntax keyword CompileComplete compilation complete
+
+	call append(0, readfile(a:temp_file_name))
+	normal! ocompilation complete
+	call delete(a:temp_file_name)
+endfunction
+
