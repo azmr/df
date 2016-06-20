@@ -21,6 +21,7 @@ Plugin 'azmr/vim-gdb'					" simple way to interact with GDB from vim
 Plugin 'dhruvasagar/vim-table-mode'		" automatic table creator & formatter
 Plugin 'fatih/vim-go'					" Go development plugin. Install required binaries with ':GoInstallBinaries'
 Plugin 'junegunn/rainbow_parentheses.vim' " rainbow parens
+Plugin 'junegunn/vim-easy-align'		" aligns characters, e.g. on =
 Plugin 'majutsushi/tagbar'				" tags outline viewer ***Requires Ctags***
 Plugin 'mattn/emmet-vim'				" expands html/css tags
 Plugin 'mhinz/vim-signify'				" VCS diff in sign column
@@ -28,7 +29,6 @@ Plugin 'rust-lang/rust.vim'				" rust file detection, syntax highlighting, and (
 Plugin 'scrooloose/syntastic'			" syntax checking
 Plugin 'sheerun/vim-polyglot'			" 50+ language pack
 Plugin 'sjl/gundo.vim'					" graphs the undo tree
-Plugin 'takac/vim-hardtime'				" to help you stop repeating the basic movement keys (:HardTimeToggle)
 Plugin 'tmhedberg/matchit'				" extended % matching for HTML, LaTeX, and many other languages
 Plugin 'tpope/vim-abolish'				" complex search & replace
 Plugin 'tpope/vim-afterimage'			" edit binary files by converting them to text equivalents
@@ -56,9 +56,13 @@ filetype plugin indent on    " required
 " Setup {{{
 set fileformats=unix,dos	" use unix line endings by default (prevents breaking)
 if has('win32')
-	cd E:\Documents\Coding
+	cd E:\Documents\Coding 	" set working directory
+	set guioptions-=m		" remove menu bar. -=M does not source the menu script at all
+	set guioptions-=T		" remove toolbar
+	set guioptions-=r		" remove right-hand scroll bar
+	set guioptions-=L		" remove left-hand scroll bar
 elseif has('unix')
-	cd ~/code
+	cd ~/code				" set working directory
 endif
 " }}}
 
@@ -87,7 +91,7 @@ set textwidth=0			" no autowrapping
 
 	" Listchars {{{
 	" toggle with set list!
-	set listchars=tab:\|\		" tabs
+	set listchars=tab:\|\ 	" tabs
 	set listchars+=trail:-		" trailing spaces
 	set listchars+=extends:>	" characters off screen to right
 	set listchars+=precedes:<	" characters off screen to left
@@ -179,6 +183,8 @@ nnoremap <leader>vv :vsplit $MYVIMRC<cr>
 nnoremap <leader>vh :hsplit $MYVIMRC<cr>
 " quick source .vimrc, sourcing normally changes working directory to default
 nnoremap <leader>vs :source $MYVIMRC<cr>
+" toggle VCS in gutter
+nnoremap <leader>vcs :SignifyToggle<cr>
 
 " copy and paste to system clipboard
 vnoremap <Leader>y "+y
@@ -227,6 +233,7 @@ nnoremap <c-n> "ldd"lp
 noremap n j
 noremap N J
 noremap <c-w>N <c-w>J
+noremap <c-w>n <c-w>j
 	" 'j'ump to next find, 'J'ump to previous find
 noremap j n
 noremap J N
@@ -251,6 +258,16 @@ vnoremap @@ :normal @@<cr>
 vnoremap . :normal .<cr>
 " echo highlighting group 
 noremap <F3> :echo synIDattr(synID(line("."),col("."),1),"name")<cr>
+" ctrl-v to paste
+inoremap <C-v> <C-r>+
+" alt-a to select all
+nnoremap <M-a> GVgg
+
+" EasyAlign: 
+" Start interactive EasyAlign in visual mode (e.g. vipga)
+xmap ga <Plug>(EasyAlign)
+" Start interactive EasyAlign for a motion/text object (e.g. gaip)
+nmap ga <Plug>(EasyAlign)
 " }}}
 
 " Languages {{{
@@ -264,22 +281,37 @@ noremap <F3> :echo synIDattr(synID(line("."),col("."),1),"name")<cr>
 		autocmd!
 		autocmd FileType c setlocal foldmethod=syntax
 	augroup END
+
 	augroup c
 		autocmd!
 		" update tags for highlighting
 		autocmd BufNewFile,BufReadPost *.h set filetype=c
+		autocmd FileType c syntax keyword cNote NOTE
+		autocmd FileType c syntax keyword cImportant IMPORTANT
+		autocmd FileType c hi! link cNote Special
+		autocmd FileType c hi! link cImportant Constant
 		autocmd FileType c nnoremap <buffer> <F11> :w<cr>:silent !ctags --format=2 --excmd=pattern --extra= --fields=nksaSmt --c-kinds=-m *.c *.h<cr>:UpdateTypesFileOnly<CR>
+		autocmd FileType c nnoremap <buffer> <S-F11> :e E:\Documents\Coding\C\windowskit_types_c.taghl<cr>
 		autocmd FileType c inoremap <buffer> #if<space> #if <end><cr>#else<cr>#endif<up><up><end>
-
+		autocmd FileType c setlocal nowrap
+		" ProcAddress for name
+		autocmd FileType c let @p='"9yiwciwnmkbame^"9Pa bcruea(name)I#define Akbotypedef (9cruA();hPcrs'
 	augroup END
+
 	if has('win32')
 		augroup c_win
 			autocmd!
 			" \ms to search msdn for word under cursor
-			autocmd FileType c nnoremap <buffer> <leader>ms "iyiw:!start "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" https://social.msdn.microsoft.com/search/en-US/windows.html?query=<c-r>i<cr>
+			autocmd FileType c nnoremap <buffer> <leader>ms "iyiw:silent !start "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" https://social.msdn.microsoft.com/search/en-US/windows.html?query=<c-r>i<cr>
+			" compilation stuff
+			autocmd FileType c setlocal errorformat=%f(%l):%m
+			autocmd FileType c setlocal makeprg=build.bat
 			autocmd FileType c nnoremap <buffer> <F5> :silent !"E:\Documents\Coding\C\build\.exe"<left><left><left><left><left>
-			autocmd FileType c nnoremap <buffer> <F6> :w \| call CompileCAsync()<cr>
-			autocmd FileType c nnoremap <buffer> <F7> :w \| silent !E:\Documents\Coding\C\shell.bat && build.bat && devenv<cr>
+			autocmd FileType c nnoremap <buffer> <F6> :w \| make!<cr><cr>
+			" autocmd FileType c nnoremap <buffer> <F6> :w \| silent !E:\Documents\Coding\C\shell64.bat && build.bat && pause<cr>
+			" autocmd FileType c nnoremap <buffer> <C-F6> :w \| call CompileCAsync('32')<cr>
+			autocmd FileType c nnoremap <buffer> <F7> :w \| silent !E:\Documents\Coding\C\shell64.bat && build.bat && devenv<cr>
+			autocmd FileType c nnoremap <buffer> <C-F7> :w \| silent !E:\Documents\Coding\C\shell32.bat && build.bat && devenv<cr>
 		augroup END
 	endif
 	" }}}
@@ -381,6 +413,7 @@ noremap <F3> :echo synIDattr(synID(line("."),col("."),1),"name")<cr>
 	" Vimscript {{{
 		augroup ft_vim
 			autocmd!
+			autocmd BufNewFile,BufReadPost *.taghl set filetype=vim
 			autocmd FileType vim setlocal foldmethod=marker
 			autocmd FileType vim setlocal nowrap
 			" create augroup block from aug
@@ -400,12 +433,17 @@ let g:syntastic_always_populate_loc_list = 1
 " let g:syntastic_auto_loc_list = 1
 let g:syntastic_check_on_open = 1
 " let g:syntastic_check_on_wq = 0
+
+" TODO: change with project
+let g:syntastic_c_compiler_options='-std=gnu99 -DBASICS_INTERNAL=1 -DBASICS_SLOW=1 -DBASICS_WIN32=1'
 " }}}
 
 " Tags {{{
 " toggle tagbar with F9
 nnoremap <F9> :TagbarToggle<CR>
 let g:tagbar_ctags_bin = "e:/Program Files/ctags58/ctags.exe"
+let g:tagbar_autofocus = 1
+let g:tagbar_autoclose = 1
 
 " easytags settings
 " let g:easytags_auto_update = 0
@@ -511,14 +549,14 @@ function! CompileCSync()
 endfunction
 
 " TODO: input lines progressively rather than all in one go
-function! CompileCAsync()
+function! CompileCAsync(bits)
 	let temp_file = tempname()
-	exec 'silent !start cmd /c "E:\Documents\Coding\C\shell.bat & build.bat > '.temp_file.
+	exec 'silent !start cmd /c "E:\Documents\Coding\C\shell'.a:bits.'.bat & build.bat > '.temp_file.
 				\ ' & vim --servername '.v:servername.' --remote-expr "GetAsyncText('."'".temp_file."')\""
 endfunction
 
 function! GetAsyncText(temp_file_name)
-    vsplit __C_Compilation_Result__
+    split __C_Compilation_Result__
     normal! ggdG
     setlocal filetype=compilation_message
     setlocal buftype=nofile
@@ -527,7 +565,8 @@ function! GetAsyncText(temp_file_name)
 	syntax keyword CompileComplete compilation complete
 
 	call append(0, readfile(a:temp_file_name))
-	normal! ocompilation complete
+	normal! ocompilation completegg
+	set nomodifiable
 	call delete(a:temp_file_name)
 endfunction
 
