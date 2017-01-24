@@ -166,6 +166,12 @@ nnoremap gj j
 nnoremap gk k
 " }}}
 
+" Open Quickfix at bottom, N lines long, maintaining window focus
+function! COpenNLines(n)
+	copen
+	exec "normal! \<c-w>J\<c-w>\<c-p>\<c-w>_".(a:n-1)."\<c-w>-"
+endfunction
+
 " Leader Shortcut Mappings {{{
 " make space leader, keeping a viable showcmd
 map <space> <leader>
@@ -219,23 +225,36 @@ nnoremap <leader>bs :bufdo %s//ge<left><left><left>
 " 		echom "trying to find from cursor"
 " show :ilist or ]I results in the quickfix window
 function! s:to_qf(command)
-  redir => output
-    silent! exec a:command
-  redir END
-  let lines = split(output, '\n')
-  if lines[0] =~ '^Error detected'
-    echomsg "Nothing found using command '".a:command."'"
-    return
-  endif
-  let [filename, line_info] = [lines[0], lines[1:-1]]
-  "turn the :ilist output into a quickfix dictionary
-  let qf_entries = map(line_info, "{
-        \ 'filename': filename,
-        \ 'lnum': split(v:val)[1],
-        \ 'text': getline(split(v:val)[1])
-        \ }")
-  call setqflist(qf_entries)
-  cwindow
+	redir => output
+	silent! exec a:command
+	redir END
+	let lines = split(output, '\n')
+	if lines[0] =~ '^Error detected'
+		echomsg "Nothing found using command '".a:command."'"
+		return
+	endif
+	" empty qf list
+	call setqflist([])
+	let err_list = []
+	for line in lines
+		let splitline = split(line)
+		if splitline[0][0] !~ '[0-9]'
+			" file names aren't preceded by a number, errors are.
+			let file_name = line "expand('#line:p')
+			" spacer name for file... TODO: not sure if wanted
+			let err = {'filename':(''), 'lnum':'', 'text':''}
+		else
+			let err_num = splitline[0]
+			let line_num = splitline[1]
+			let line_text = join(splitline[2:-1])
+			let err = {'filename':file_name, 'lnum':line_num, 'text':line_text}
+		endif
+		call add(l:err_list, err)
+	endfor
+		call setqflist(err_list)
+
+	" fancier version of copen
+	call COpenNLines(4)
 endfunction
 noremap <silent> [I :call <sid>to_qf("normal! [I")<CR>
 noremap <silent> ]I :call <sid>to_qf("normal! ]I")<CR>
@@ -367,8 +386,8 @@ nmap ga <Plug>(EasyAlign)
 			autocmd FileType c nnoremap <buffer> <F5> :silent !"E:\Documents\Coding\C\build\.exe"<left><left><left><left><left>
 			" 2nd <cr> acts as silencer for 'you put in this command'
 			" end resizes windows so that quickfix is 4 lines long
-			autocmd FileType c nnoremap <buffer> <F6> :w \| make! -Od<cr>:copen<cr><cr><c-w>J<c-w><c-p><c-w>_3<c-w>-
-			autocmd FileType c nnoremap <buffer> <S-F6> :w \| make! -O2<cr>:copen<cr><cr><c-w>J<c-w><c-p><c-w>_3<c-w>-
+			autocmd FileType c nnoremap <buffer> <F6> :w \| make! -Od<cr>:call COpenNLines(4)<cr><cr>
+			autocmd FileType c nnoremap <buffer> <S-F6> :w \| make! -O2<cr>:call COpenNLines(4)<cr><cr>
 			" autocmd FileType c nnoremap <buffer> <F6> :w \| silent !E:\Documents\Coding\C\shell64.bat && build.bat && pause<cr>
 			" autocmd FileType c nnoremap <buffer> <C-F6> :w \| call CompileCAsync('32')<cr>
 			autocmd FileType c nnoremap <buffer> <F7> :w \| silent !E:\Documents\Coding\C\shell64.bat && build.bat && devenv<cr>
