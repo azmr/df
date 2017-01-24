@@ -88,6 +88,7 @@ set lazyredraw          " redraw only when we need to.
 filetype indent on      " load filetype-specific indent files
 set hidden				" allows you to change out of unsaved buffers
 set textwidth=0			" no autowrapping
+set visualbell			" flashes on error rather than beeps
 
 	" Listchars {{{
 	" toggle with set list!
@@ -145,7 +146,9 @@ set textwidth=0			" no autowrapping
 set incsearch           " search as characters are entered
 set ignorecase			" case insensitive searches...
 set smartcase			" ... except when they include capitals
-" set hlsearch            " highlight matches
+" highlight matches
+noremap / :set hlsearch<cr>/
+noremap  :set nohlsearch<cr>
 " nnoremap / :nohl<CR>/	" removes highlight on next find
 " }}}
 
@@ -171,10 +174,13 @@ nnoremap <leader>bn :bnext<cr>
 nnoremap <leader>bp :bprev<cr>
 nnoremap <leader>bN :bLast<cr>
 nnoremap <leader>bP :bfirst<cr>
+nnoremap <leader>bd :bp<bar>sp<bar>bn<bar>bd<cr>.  
 " change directory to current file's
 nnoremap <leader>% :cd %:p:h<cr>
 " use undo tree (super undo)
 nnoremap <leader>u :GundoToggle<CR>
+" copy all to system clipboard
+nnoremap <Leader>a ggVG"+y<c-o><c-o>zz
 " quick save
 nnoremap <Leader>w :w<CR>
 " quick edit .vimrc
@@ -198,10 +204,50 @@ vnoremap <Leader>P "+P
 nnoremap <leader>cp :set operatorfunc=ChangePut<cr>g@
 vnoremap <leader>cp :<c-u>call ChangePut(visualmode())<cr>
 
+" search across included files (! includes comments, / means word does not have to be whole)
+nnoremap <leader>/ :call IList_QF("")<left><left>
 " search across open buffers (and echo found line)
 nnoremap <leader>b/ :bufdo //e <bar> echo expand('.')<c-left><c-left><c-left><c-left><right>
 " search and replace across open buffers
 nnoremap <leader>bs :bufdo %s//ge<left><left><left>
+
+" if a:pattern != ""
+" 		echom "trying to find ".a:pattern
+" 		"silent!
+" 		exec 'ilist '.a:pattern
+" 	else
+" 		echom "trying to find from cursor"
+" show :ilist or ]I results in the quickfix window
+function! s:to_qf(command)
+  redir => output
+    silent! exec a:command
+  redir END
+  let lines = split(output, '\n')
+  if lines[0] =~ '^Error detected'
+    echomsg "Nothing found using command '".a:command."'"
+    return
+  endif
+  let [filename, line_info] = [lines[0], lines[1:-1]]
+  "turn the :ilist output into a quickfix dictionary
+  let qf_entries = map(line_info, "{
+        \ 'filename': filename,
+        \ 'lnum': split(v:val)[1],
+        \ 'text': getline(split(v:val)[1])
+        \ }")
+  call setqflist(qf_entries)
+  cwindow
+endfunction
+noremap <silent> [I :call <sid>to_qf("normal! [I")<CR>
+noremap <silent> ]I :call <sid>to_qf("normal! ]I")<CR>
+
+function! To_QF(command)
+	exec 'call <sid>to_qf("'.a:command.'")'
+endfunction
+
+function! IList_QF(pattern)
+	exec 'call To_QF("ilist '.a:pattern.'")'
+endfunction
+"-------------------------------------------------------
 
 " TODO: implement repeat.vim
 " TODO: take from specific register
@@ -219,6 +265,10 @@ endfunction
 
 " call QuickGDB with the option of arguments
 nnoremap <leader>g :call QuickGDB()<left>
+" :vimgrep current file
+nnoremap <leader>vg :vimgrep  %<left><left>
+" find TODOs
+nnoremap <leader>T :vimgrep TODO %<cr>
 " }}}
 
 " Misc Mappings {{{
@@ -277,6 +327,10 @@ nmap ga <Plug>(EasyAlign)
 	highlight! link CompileWarning SpellCap
 	highlight! link CompileComplete Special
 
+	function! CreateHeaderGuards(filename)
+		exec 'normal i#ifndef '.a:filename.'#define '.a:filename.'#endifk^f.r_cruk^f.r_cruo'
+	endfunction
+
 	augroup c
 		autocmd!
 		autocmd FileType c setlocal foldmethod=syntax
@@ -286,6 +340,7 @@ nmap ga <Plug>(EasyAlign)
 		autocmd!
 		" update tags for highlighting
 		autocmd BufNewFile,BufReadPost *.h set filetype=c
+		autocmd BufNewFile *.h call CreateHeaderGuards(expand('%:t'))
 		autocmd FileType c syntax keyword cNote NOTE
 		autocmd FileType c syntax keyword cImportant IMPORTANT
 		autocmd FileType c hi! link cNote Special
@@ -293,6 +348,8 @@ nmap ga <Plug>(EasyAlign)
 		autocmd FileType c nnoremap <buffer> <F11> :w<cr>:silent !ctags --format=2 --excmd=pattern --extra= --fields=nksaSmt --c-kinds=-m *.c *.h<cr>:UpdateTypesFileOnly<CR>
 		autocmd FileType c nnoremap <buffer> <S-F11> :e E:\Documents\Coding\C\windowskit_types_c.taghl<cr>
 		autocmd FileType c inoremap <buffer> #if<space> #if <end><cr>#else<cr>#endif<up><up><end>
+		autocmd FileType c nnoremap <buffer> <Leader>. :s/->/./g<cr><c-o>
+		autocmd FileType c nnoremap <buffer> <Leader>> :s/\./->/g<cr><c-o>
 		autocmd FileType c setlocal nowrap
 		" ProcAddress for name
 		autocmd FileType c let @p='"9yiwciwnmkbame^"9Pa bcruea(name)I#define Akbotypedef (9cruA();hPcrs'
@@ -301,16 +358,21 @@ nmap ga <Plug>(EasyAlign)
 	if has('win32')
 		augroup c_win
 			autocmd!
+			autocmd FileType c setlocal path+=E:\Documents\Coding\C\h
 			" \ms to search msdn for word under cursor
 			autocmd FileType c nnoremap <buffer> <leader>ms "iyiw:silent !start "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" https://social.msdn.microsoft.com/search/en-US/windows.html?query=<c-r>i<cr>
 			" compilation stuff
 			autocmd FileType c setlocal errorformat=%f(%l):%m
 			autocmd FileType c setlocal makeprg=build.bat
 			autocmd FileType c nnoremap <buffer> <F5> :silent !"E:\Documents\Coding\C\build\.exe"<left><left><left><left><left>
-			autocmd FileType c nnoremap <buffer> <F6> :w \| make!<cr><cr>
+			" 2nd <cr> acts as silencer for 'you put in this command'
+			" end resizes windows so that quickfix is 4 lines long
+			autocmd FileType c nnoremap <buffer> <F6> :w \| make! -Od<cr>:copen<cr><cr><c-w>J<c-w><c-p><c-w>_3<c-w>-
+			autocmd FileType c nnoremap <buffer> <S-F6> :w \| make! -O2<cr>:copen<cr><cr><c-w>J<c-w><c-p><c-w>_3<c-w>-
 			" autocmd FileType c nnoremap <buffer> <F6> :w \| silent !E:\Documents\Coding\C\shell64.bat && build.bat && pause<cr>
 			" autocmd FileType c nnoremap <buffer> <C-F6> :w \| call CompileCAsync('32')<cr>
 			autocmd FileType c nnoremap <buffer> <F7> :w \| silent !E:\Documents\Coding\C\shell64.bat && build.bat && devenv<cr>
+			autocmd FileType c nnoremap <buffer> <S-F7> :w \| silent !E:\Documents\Coding\C\shell64.bat && build.bat && devenv E:\Documents\Coding\C\build\
 			autocmd FileType c nnoremap <buffer> <C-F7> :w \| silent !E:\Documents\Coding\C\shell32.bat && build.bat && devenv<cr>
 		augroup END
 	endif
@@ -399,6 +461,16 @@ nmap ga <Plug>(EasyAlign)
 		augroup END
 	" }}}
 
+	" Python {{{
+	augroup python
+		autocmd!
+		" Python 3
+		autocmd FileType python :nnoremap <buffer> <F6> :silent exec "!python ".expand('%')<cr>
+		" Python 2
+		autocmd FileType python :nnoremap <buffer> <F7> :silent exec "!py ".expand('%')<cr>
+	augroup END
+	" }}}
+
 	" Rust {{{
 	augroup ft_rust
 		" remove any duplicates of this group
@@ -423,6 +495,11 @@ nmap ga <Plug>(EasyAlign)
 	" }}}
 " }}}
 
+" Plotting {{{
+"
+nnoremap <leader>gp :silent !gnuplot -persist -e "plot '%:p' with linespoints"<cr>
+" }}}
+
 " Syntax {{{
 " syntastic recommended settings:
 " set statusline+=%#warningmsg#
@@ -435,7 +512,9 @@ let g:syntastic_check_on_open = 1
 " let g:syntastic_check_on_wq = 0
 
 " TODO: change with project
-let g:syntastic_c_compiler_options='-std=gnu99 -DBASICS_INTERNAL=1 -DBASICS_SLOW=1 -DBASICS_WIN32=1'
+" let g:syntastic_c_compiler_options='-std=gnu99 -DBASICS_INTERNAL=1 -DBASICS_SLOW=1 -DBASICS_WIN32=1'
+" let g:syntastic_c_compiler_options='-std=gnu99 -DLIGHT_INTERNAL=1 -DLIGHT_SLOW=1 -DLIGHT_WIN32=1'
+let g:syntastic_c_compiler_options='-std=gnu99 -IE:/Documents/Coding/C/h'
 " }}}
 
 " Tags {{{
